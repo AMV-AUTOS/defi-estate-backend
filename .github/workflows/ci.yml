@@ -36,3 +36,5 @@ jobs:
       - run: bun run db:migrate
       - run: bun test
       - run: bun run build
+      - name: Build Docker image
+        run: docker build -t backend-api:ci .

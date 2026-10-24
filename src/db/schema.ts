@@ -4,6 +4,11 @@ import { PROPERTY_STATUSES, PROPERTY_TYPES } from '../shared';
 export const propertyStatus = pgEnum('property_status', PROPERTY_STATUSES);
 export const propertyType = pgEnum('property_type', PROPERTY_TYPES);
 
+export const KYC_STATUSES = ['pending', 'approved', 'rejected'] as const;
+export type KycStatus = (typeof KYC_STATUSES)[number];
+
+export const kycStatus = pgEnum('kyc_status', KYC_STATUSES);
+
 export const properties = pgTable('properties', {
   id: uuid('id').primaryKey().defaultRandom(),
   name: text('name').notNull(),
@@ -21,7 +26,30 @@ export const properties = pgTable('properties', {
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
 });
 
+export const kycSubmissions = pgTable('kyc_submissions', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id').notNull(),
+  status: kycStatus('status').notNull().default('pending'),
+  reviewedBy: uuid('reviewed_by'),
+  reviewedAt: timestamp('reviewed_at', { withTimezone: true }),
+  notes: text('notes'),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const auditLogs = pgTable('audit_logs', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  actorId: uuid('actor_id').notNull(),
+  action: text('action').notNull(),
+  entityType: text('entity_type').notNull(),
+  entityId: uuid('entity_id').notNull(),
+  metadata: jsonb('metadata').$type<Record<string, unknown>>(),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
 export type PropertyRow = typeof properties.$inferSelect;
+export type KycSubmissionRow = typeof kycSubmissions.$inferSelect;
+export type AuditLogRow = typeof auditLogs.$inferSelect;
 
 export const DISTRIBUTION_STATUSES = ['pending', 'submitted', 'completed', 'failed'] as const;
 export type DistributionStatus = (typeof DISTRIBUTION_STATUSES)[number];

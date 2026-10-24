@@ -8,6 +8,13 @@
       "when": 1792846226964,
       "tag": "0000_broad_tyger_tiger",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1792846226965,
+      "tag": "0001_kyc_submissions_and_audit_logs",
+      "breakpoints": true
     }
   ]
 }
