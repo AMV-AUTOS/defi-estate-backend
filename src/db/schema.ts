@@ -61,3 +61,46 @@ export type PropertyRow = typeof properties.$inferSelect;
 export type UserRow = typeof users.$inferSelect;
 export type KycSubmissionRow = typeof kycSubmissions.$inferSelect;
 export type AuditLogRow = typeof auditLogs.$inferSelect;
+
+export const DISTRIBUTION_STATUSES = ['pending', 'submitted', 'completed', 'failed'] as const;
+export type DistributionStatus = (typeof DISTRIBUTION_STATUSES)[number];
+
+export const distributionStatus = pgEnum('distribution_status', DISTRIBUTION_STATUSES);
+
+export const distributions = pgTable('distributions', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  propertyId: uuid('property_id')
+    .notNull()
+    .references(() => properties.id, { onDelete: 'cascade' }),
+  period: text('period').notNull(),
+  grossAmount: text('gross_amount').notNull(),
+  snapshotLedger: integer('snapshot_ledger').notNull(),
+  allocations: jsonb('allocations').$type<Record<string, string>>().notNull(),
+  txHashes: jsonb('tx_hashes').$type<string[]>().notNull().default([]),
+  status: distributionStatus('status').notNull().default('pending'),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
+export type DistributionRow = typeof distributions.$inferSelect;
+export type NewDistributionRow = typeof distributions.$inferInsert;
+
+export const TRANSACTION_STATUSES = ['pending', 'submitted', 'confirmed', 'failed'] as const;
+export type TransactionStatus = (typeof TRANSACTION_STATUSES)[number];
+
+export const transactionStatus = pgEnum('transaction_status', TRANSACTION_STATUSES);
+
+export const transactions = pgTable('transactions', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  distributionId: uuid('distribution_id').references(() => distributions.id, { onDelete: 'cascade' }),
+  propertyId: uuid('property_id').references(() => properties.id, { onDelete: 'cascade' }),
+  txHash: text('tx_hash'),
+  status: transactionStatus('status').notNull().default('pending'),
+  batchIndex: integer('batch_index'),
+  holderCount: integer('holder_count'),
+  error: text('error'),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
+export type TransactionRow = typeof transactions.$inferSelect;
+export type NewTransactionRow = typeof transactions.$inferInsert;
